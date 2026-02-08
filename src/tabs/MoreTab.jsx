@@ -13,7 +13,7 @@ import {
   cloudValidateSession, cloudUploadBackup, cloudDownloadBackup
 } from '../cloudSync'
 
-const PHOTO_CATEGORIES = ['Ultrasound', 'Documents', 'Receipts', 'Boshi Techo', 'Other']
+const PHOTO_CATEGORIES = ['Ultrasound', 'Documents', 'Receipts', 'Medical', 'Other']
 
 const INFO_SECTIONS = [
   { id: 'gov', label: 'Gov Support', icon: '🏛️' },
@@ -21,347 +21,42 @@ const INFO_SECTIONS = [
   { id: 'health', label: 'Health Tips', icon: '🧠' },
   { id: 'supps', label: 'Supplements', icon: '💊' },
   { id: 'names', label: 'Baby Names', icon: '👶' },
-  { id: 'area', label: 'Your Area Info', icon: '🏢' },
+  { id: 'area', label: 'Area Info', icon: '🏢' },
   { id: 'money-summary', label: 'Total Benefits', icon: '💰' },
 ]
 
 function InfoPanel({ section }) {
-  const [expandedPhase, setExpandedPhase] = useState(null)
-  const [expandedItem, setExpandedItem] = useState(null)
-  const [nameGender, setNameGender] = useState('boy')
+  const hasGov = governmentSupportInfo.length > 0
+  const hasBudget = budgetTipsInfo.sections.length > 0
+  const hasHealth = healthTipsInfo.sections.length > 0
+  const hasSupps = supplementsDetailInfo.sections.length > 0
+  const hasNames = babyNamesInfo.boyNames.length > 0 || babyNamesInfo.girlNames.length > 0
+  const hasArea = Boolean(areaInfo.address)
+  const hasMoneySummary = financialSummary.directCash.items.length > 0
 
-  if (section === 'gov') {
-    return (
-      <div className="info-panel">
-        <h3>Government Support Guide</h3>
-        <p className="section-note">Complete guide to ALL government benefits. Your Area specific. Tap each phase to see details.</p>
-        {governmentSupportInfo.map((phase, pi) => (
-          <div key={pi} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === pi ? null : pi)}>
-              <span>{phase.icon} {phase.phase}</span>
-              <span className="info-count">{phase.items.length} items {expandedPhase === pi ? '▲' : '▼'}</span>
-            </div>
-            {expandedPhase === pi && (
-              <div className="info-phase-body">
-                {phase.items.map((item, ii) => (
-                  <div key={ii} className="info-item glass-inner">
-                    <div className="info-item-header" onClick={() => setExpandedItem(expandedItem === `${pi}-${ii}` ? null : `${pi}-${ii}`)}>
-                      <div className="info-item-title">{item.title}</div>
-                      <div className="info-item-value">{item.value}</div>
-                    </div>
-                    {expandedItem === `${pi}-${ii}` && (
-                      <ul className="info-details">
-                        {item.details.map((d, di) => (
-                          <li key={di}>{d}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    )
+  if (section === 'gov' && !hasGov) {
+    return <div className="info-panel"><h3>Government Support Guide</h3><p className="empty-state">Blank scaffold. Add your local support programs in future patches.</p></div>
+  }
+  if (section === 'budget' && !hasBudget) {
+    return <div className="info-panel"><h3>Budget Tips</h3><p className="empty-state">Blank scaffold. Add your own budget tips later.</p></div>
+  }
+  if (section === 'health' && !hasHealth) {
+    return <div className="info-panel"><h3>Health Tips</h3><p className="empty-state">Blank scaffold. Add your own health notes later.</p></div>
+  }
+  if (section === 'supps' && !hasSupps) {
+    return <div className="info-panel"><h3>Supplements</h3><p className="empty-state">Blank scaffold. No prefilled supplement guide.</p></div>
+  }
+  if (section === 'names' && !hasNames) {
+    return <div className="info-panel"><h3>Baby Names</h3><p className="empty-state">Blank scaffold. Add your own baby name ideas.</p></div>
+  }
+  if (section === 'area' && !hasArea) {
+    return <div className="info-panel"><h3>Area Info</h3><p className="empty-state">Blank scaffold. No prefilled city/phone details.</p></div>
+  }
+  if (section === 'money-summary' && !hasMoneySummary) {
+    return <div className="info-panel"><h3>Total Benefits</h3><p className="empty-state">Blank scaffold. Add your own cost/benefit assumptions.</p></div>
   }
 
-  if (section === 'budget') {
-    return (
-      <div className="info-panel">
-        <h3>{budgetTipsInfo.title}</h3>
-        {budgetTipsInfo.sections.map((sec, si) => (
-          <div key={si} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === si ? null : si)}>
-              <span>{sec.icon} {sec.title}</span>
-              <span>{expandedPhase === si ? '▲' : '▼'}</span>
-            </div>
-            {expandedPhase === si && (
-              <div className="info-phase-body">
-                {sec.content.map((c, ci) => (
-                  <div key={ci} className="info-tip glass-inner">
-                    <div className="info-tip-label">{c.label}</div>
-                    <div className="info-tip-detail">{c.detail}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (section === 'health') {
-    return (
-      <div className="info-panel">
-        <h3>{healthTipsInfo.title}</h3>
-        {healthTipsInfo.sections.map((sec, si) => (
-          <div key={si} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === si ? null : si)}>
-              <span>{sec.icon} {sec.title}</span>
-              <span>{expandedPhase === si ? '▲' : '▼'}</span>
-            </div>
-            {expandedPhase === si && (
-              <div className="info-phase-body">
-                {sec.content.map((c, ci) => (
-                  <div key={ci} className="info-tip glass-inner">
-                    <div className="info-tip-label">{c.label}</div>
-                    <div className="info-tip-detail">{c.detail}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  if (section === 'supps') {
-    return (
-      <div className="info-panel">
-        <h3>{supplementsDetailInfo.title}</h3>
-        <p className="section-note disclaimer">{supplementsDetailInfo.disclaimer}</p>
-
-        {supplementsDetailInfo.sections.map((sec, si) => (
-          <div key={si} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === si ? null : si)}>
-              <span>{sec.icon} {sec.name}</span>
-              <span>{expandedPhase === si ? '▲' : '▼'}</span>
-            </div>
-            {expandedPhase === si && (
-              <div className="info-phase-body">
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Why essential</div>
-                  <div className="info-tip-detail">{sec.why}</div>
-                </div>
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">When to take</div>
-                  <div className="info-tip-detail">{sec.when}</div>
-                </div>
-                {sec.target && (
-                  <div className="info-tip glass-inner">
-                    <div className="info-tip-label">Target dosage</div>
-                    <div className="info-tip-detail">{sec.target}</div>
-                  </div>
-                )}
-                <div className="info-tip-label" style={{padding:'8px 0 4px'}}>iHerb Options:</div>
-                {sec.options.map((opt, oi) => (
-                  <div key={oi} className="info-tip glass-inner">
-                    <div className="info-tip-label">{opt.product}</div>
-                    <div className="info-tip-detail">{opt.price} - {opt.note} (Lasts: {opt.lasts})</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        <div className="glass-card info-phase">
-          <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === 'schedule' ? null : 'schedule')}>
-            <span>⏰ Daily Schedule</span>
-            <span>{expandedPhase === 'schedule' ? '▲' : '▼'}</span>
-          </div>
-          {expandedPhase === 'schedule' && (
-            <div className="info-phase-body">
-              {supplementsDetailInfo.schedule.map((s, si) => (
-                <div key={si} className="info-tip glass-inner">
-                  <div className="info-tip-label">{s.time}</div>
-                  <div className="info-tip-detail">{s.supplements}</div>
-                  <div className="info-tip-detail" style={{opacity:0.7, fontSize:'0.85em'}}>{s.note}</div>
-                </div>
-              ))}
-              <div className="glass-inner warn-card" style={{marginTop:8}}>
-                <p>{supplementsDetailInfo.importantRule}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="glass-card info-phase">
-          <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === 'tips' ? null : 'tips')}>
-            <span>💡 iHerb Tips & What NOT to Buy</span>
-            <span>{expandedPhase === 'tips' ? '▲' : '▼'}</span>
-          </div>
-          {expandedPhase === 'tips' && (
-            <div className="info-phase-body">
-              <div className="info-tip-label">iHerb Tips:</div>
-              {supplementsDetailInfo.iherbTips.map((t, ti) => (
-                <div key={ti} className="info-tip glass-inner">
-                  <div className="info-tip-detail">{t}</div>
-                </div>
-              ))}
-              <div className="info-tip-label" style={{marginTop:8}}>DON'T buy (waste of money):</div>
-              {supplementsDetailInfo.whatNotToBuy.map((t, ti) => (
-                <div key={ti} className="info-tip glass-inner">
-                  <div className="info-tip-detail" style={{opacity:0.7}}>✗ {t}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (section === 'names') {
-    const names = nameGender === 'boy' ? babyNamesInfo.boyNames : babyNamesInfo.girlNames
-    return (
-      <div className="info-panel">
-        <h3>{babyNamesInfo.title}</h3>
-        <p className="section-note">{babyNamesInfo.subtitle}</p>
-        <div className="glass-card info-tip">
-          <div className="info-tip-label">The Older Sibling Formula: {babyNamesInfo.olderSiblingFormula.sound}</div>
-          <div className="info-tip-detail">Kanji: {babyNamesInfo.olderSiblingFormula.kanji} - {babyNamesInfo.olderSiblingFormula.meaning}</div>
-        </div>
-
-        <div className="name-gender-toggle">
-          <button className={`att-btn ${nameGender === 'boy' ? 'active worked' : ''}`} onClick={() => setNameGender('boy')}>Boy Names</button>
-          <button className={`att-btn ${nameGender === 'girl' ? 'active worked' : ''}`} onClick={() => setNameGender('girl')}>Girl Names</button>
-        </div>
-
-        {names.map((n, ni) => (
-          <div key={ni} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedItem(expandedItem === `name-${ni}` ? null : `name-${ni}`)}>
-              <span className="name-header">
-                <span className="name-main">{n.name}</span>
-                <span className="name-kanji">{n.kanji}</span>
-                {n.tier === 1 && <span className="tier-badge">Top Pick</span>}
-              </span>
-              <span>{expandedItem === `name-${ni}` ? '▲' : '▼'}</span>
-            </div>
-            {expandedItem === `name-${ni}` && (
-              <div className="info-phase-body">
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Meaning</div>
-                  <div className="info-tip-detail">{n.meaning}</div>
-                </div>
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Sibling Pair</div>
-                  <div className="info-tip-detail">{n.pairing}</div>
-                </div>
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Why this name</div>
-                  <div className="info-tip-detail">{n.why}</div>
-                </div>
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Readability</div>
-                  <div className="info-tip-detail">{n.readability}</div>
-                </div>
-                <div className="info-tip glass-inner">
-                  <div className="info-tip-label">Nicknames</div>
-                  <div className="info-tip-detail">{n.nicknames}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-
-        <div className="glass-card info-phase">
-          <div className="info-phase-header" onClick={() => setExpandedItem(expandedItem === 'pnotes' ? null : 'pnotes')}>
-            <span>📝 Practical Notes</span>
-            <span>{expandedItem === 'pnotes' ? '▲' : '▼'}</span>
-          </div>
-          {expandedItem === 'pnotes' && (
-            <div className="info-phase-body">
-              {babyNamesInfo.practicalNotes.map((n, ni) => (
-                <div key={ni} className="info-tip glass-inner">
-                  <div className="info-tip-detail">{n}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (section === 'area') {
-    const ki = areaInfo
-    return (
-      <div className="info-panel">
-        <h3>Your Area Info</h3>
-        <p className="section-note">Your area: {ki.address}</p>
-
-        {[
-          { label: ki.wardOffice.name, detail: `${ki.wardOffice.address}\nPhone: ${ki.wardOffice.mainPhone}\nHours: ${ki.wardOffice.hours}\n${ki.wardOffice.note}` },
-          ...Object.values(ki.wardOffice.departments).map(d => ({ label: `  ${d.name}`, detail: d.phone })),
-          { label: ki.taxOffice.name, detail: `${ki.taxOffice.address}\nPhone: ${ki.taxOffice.phone}\n${ki.taxOffice.note}` },
-          { label: ki.pensionOffice.name, detail: `${ki.pensionOffice.address}\nPhone: ${ki.pensionOffice.phone}\n${ki.pensionOffice.note}` },
-          { label: ki.healthCenter.name, detail: `${ki.healthCenter.address}\nPhone: ${ki.healthCenter.phone}\n${ki.healthCenter.note}` },
-          { label: ki.urHousing.name, detail: `Phone: ${ki.urHousing.phone}\n${ki.urHousing.note}` },
-          { label: ki.kanagawaHousing.name, detail: `Phone: ${ki.kanagawaHousing.phone}\n${ki.kanagawaHousing.note}` },
-          { label: ki.internationalExchange.name, detail: `${ki.internationalExchange.address}\nPhone: ${ki.internationalExchange.phone}\n${ki.internationalExchange.note}` },
-          { label: ki.philConsulateYokohama.name, detail: `Phone: ${ki.philConsulateYokohama.phone}\n${ki.philConsulateYokohama.note}` },
-          { label: ki.philEmbassy.name, detail: `${ki.philEmbassy.address}\nPhone: ${ki.philEmbassy.phone}\n${ki.philEmbassy.note}` },
-        ].map((item, i) => (
-          <div key={i} className="glass-card info-tip">
-            <div className="info-tip-label">{item.label}</div>
-            <div className="info-tip-detail" style={{whiteSpace:'pre-line'}}>{item.detail}</div>
-          </div>
-        ))}
-
-        <div className="glass-card info-phase">
-          <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === 'danchi' ? null : 'danchi')}>
-            <span>🏠 Danchi / Public Housing Tips</span>
-            <span>{expandedPhase === 'danchi' ? '▲' : '▼'}</span>
-          </div>
-          {expandedPhase === 'danchi' && (
-            <div className="info-phase-body">
-              <p className="section-note">{ki.danchiInfo.note}</p>
-              {ki.danchiInfo.tips.map((t, ti) => (
-                <div key={ti} className="info-tip glass-inner">
-                  <div className="info-tip-detail">{t}</div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  if (section === 'money-summary') {
-    const fs = financialSummary
-    return (
-      <div className="info-panel">
-        <h3>Total Government Support Summary</h3>
-        <p className="section-note">Conservative to maximum estimates over 18 years for 2 children.</p>
-
-        {[fs.directCash, fs.monthlyChild, fs.costSavings, fs.taxBenefits].map((cat, ci) => (
-          <div key={ci} className="glass-card info-phase">
-            <div className="info-phase-header" onClick={() => setExpandedPhase(expandedPhase === ci ? null : ci)}>
-              <span>{cat.title}</span>
-              <span className="info-item-value">{cat.total}</span>
-            </div>
-            {expandedPhase === ci && (
-              <div className="info-phase-body">
-                {cat.items.map((item, ii) => (
-                  <div key={ii} className="info-tip glass-inner">
-                    <div className="info-tip-label">{item.label}</div>
-                    <div className="info-tip-detail">{item.amount}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        <div className="glass-card grand-total">
-          <div className="grand-total-label">GRAND TOTAL (18 years, 2 kids)</div>
-          <div className="grand-total-range">
-            <span>{fs.grandTotal.conservative}</span>
-            <span> ~ </span>
-            <span>{fs.grandTotal.maximum}</span>
-          </div>
-          <div className="grand-total-note">{fs.grandTotal.note}</div>
-        </div>
-      </div>
-    )
-  }
-
-  return null
+  return <div className="info-panel"><p className="empty-state">This section is empty in the public scaffold.</p></div>
 }
 
 export default function MoreTab() {
@@ -593,10 +288,10 @@ export default function MoreTab() {
             <span className="section-icon">📖</span>
             <div>
               <h2>Knowledge Base</h2>
-              <span className="section-count">All info from all guides</span>
+              <span className="section-count">Blank starter</span>
             </div>
           </div>
-          <p className="section-note">Everything you need to know, organized by topic. All info from the original guides is here.</p>
+          <p className="section-note">This public app starts blank. Add your own location, programs, and references over time.</p>
 
           <div className="info-nav">
             {INFO_SECTIONS.map(s => (
@@ -783,7 +478,7 @@ export default function MoreTab() {
               <div className="glass-card backup-card">
                 <h3>Cloud Sync (Supabase)</h3>
                 {!cloudEnabled ? (
-                  <p className="section-note">Not configured yet. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `app/.env.local`.</p>
+                  <p className="section-note">Not configured yet. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `app-public/.env.local`.</p>
                 ) : (
                   <>
                     <p className="section-note">Auto-sync is enabled per account. On sign in, your cloud data is applied automatically.</p>

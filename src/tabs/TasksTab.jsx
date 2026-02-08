@@ -22,6 +22,11 @@ export default function TasksTab() {
         <h2>Task Checklist</h2>
         <span className="tab-header-count">{doneItems}/{totalItems} done</span>
       </div>
+      {phases.length === 0 && (
+        <section className="glass-section">
+          <p className="empty-state">No prefilled tasks. This scaffold starts blank.</p>
+        </section>
+      )}
       {phases.map(phase => {
         const done = phase.items.filter(i => checked[i.id]).length
         const total = phase.items.length

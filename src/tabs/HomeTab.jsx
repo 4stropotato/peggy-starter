@@ -67,9 +67,11 @@ export default function HomeTab() {
     return times.every((_, i) => isSuppTaken(s.id, i))
   }).length
   const suppTotal = supplements.length
+  const suppProgressPct = suppTotal > 0 ? (suppTaken / suppTotal) * 100 : 0
 
   const totalMoney = moneyTracker.reduce((acc, m) => acc + m.amount, 0)
   const claimedMoney = moneyTracker.filter(m => moneyClaimed[m.id]).reduce((acc, m) => acc + m.amount, 0)
+  const moneyProgressPct = totalMoney > 0 ? (claimedMoney / totalMoney) * 100 : 0
 
   const daysUntilDue = dueDate
     ? Math.ceil((new Date(dueDate) - new Date()) / (1000 * 60 * 60 * 24))
@@ -80,6 +82,7 @@ export default function HomeTab() {
     : null
 
   const dailyTip = useMemo(() => {
+    if (!taglishTips.length) return 'No tips yet. Add your own notes in future patches.'
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24))
     return taglishTips[dayOfYear % taglishTips.length]
   }, [])
@@ -91,6 +94,7 @@ export default function HomeTab() {
     return null
   }, [checkups])
 
+  const checkupTotal = checkupSchedule.length
   const completedCheckups = checkupSchedule.filter(v => checkups[v.id]?.completed).length
   const latestMood = moods.length > 0 ? moods[0] : null
 
@@ -123,7 +127,7 @@ export default function HomeTab() {
   const todayDay = now.getDay()
   const isWeekday = todayDay >= 1 && todayDay <= 5
   const todayAttendance = attendance[todayStr]
-  const allSuppsTaken = suppTaken === suppTotal
+  const allSuppsTaken = suppTotal === 0 ? true : suppTaken === suppTotal
 
   return (
     <div className="content">
@@ -161,12 +165,12 @@ export default function HomeTab() {
         <div className="stat-card glass-card">
           <div className="stat-number">{suppTaken}/{suppTotal}</div>
           <div className="stat-label">Supps Today</div>
-          <div className="stat-bar"><div style={{ width: `${(suppTaken / suppTotal) * 100}%` }} className="green" /></div>
+          <div className="stat-bar"><div style={{ width: `${suppProgressPct}%` }} className="green" /></div>
         </div>
         <div className="stat-card glass-card">
           <div className="stat-number">{(claimedMoney / 10000).toFixed(0)}万</div>
           <div className="stat-label">Yen Claimed</div>
-          <div className="stat-bar"><div style={{ width: `${(claimedMoney / totalMoney) * 100}%` }} className="gold" /></div>
+          <div className="stat-bar"><div style={{ width: `${moneyProgressPct}%` }} className="gold" /></div>
         </div>
       </div>
 
@@ -226,7 +230,7 @@ export default function HomeTab() {
           </div>
           <div className="ring-info">
             <div className="ring-detail">Trimester {weeksPregnant < 13 ? '1' : weeksPregnant < 27 ? '2' : '3'}</div>
-            <div className="ring-detail">Checkups: {completedCheckups}/14</div>
+            <div className="ring-detail">Checkups: {completedCheckups}/{checkupTotal}</div>
             {latestMood && (
               <div className="ring-detail">Mood: {latestMood.mood} {latestMood.energy && `Energy: ${latestMood.energy}/5`}</div>
             )}
@@ -321,7 +325,7 @@ export default function HomeTab() {
           <div className="quick-stat glass-inner">
             <span className="qs-icon">🏥</span>
             <span className="qs-label">Checkups</span>
-            <span className="qs-value">{completedCheckups}/14</span>
+            <span className="qs-value">{completedCheckups}/{checkupTotal}</span>
           </div>
           <div className="quick-stat glass-inner">
             <span className="qs-icon">💊</span>
